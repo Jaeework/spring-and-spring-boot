@@ -15,6 +15,8 @@ export default function AuthProvider({ children }) {
 
     const [username, setUsername] = useState(null);
 
+    const[token, setToken] = useState(null);
+
     // function login(username, password) {
     //     if(username==='in28minutes' && password==='dummy') {
     //         setAuthenticated(true);
@@ -27,36 +29,37 @@ export default function AuthProvider({ children }) {
     //     }
     // }
 
-    function login(username, password) {
+    async function login(username, password) {
 
         // Basic Token 을 작성하는 표준화된 방법
         const baToken = 'Basic ' + window.btoa( username + ":" + password );
 
-        executeBasicAuthenticationService(baToken)
-        .then(resposne => {
-            console.log(resposne)
-        })
-        .catch(error => console.log(error))
+        try {
+            const response = await executeBasicAuthenticationService(baToken)
 
-        setAuthenticated(false);
-
-        // if(username==='in28minutes' && password==='dummy') {
-        //     setAuthenticated(true);
-        //     setUsername(username);
-        //     return true;
-        // } else {
-        //     setAuthenticated(false);
-        //     setUsername(null);
-        //     return false;
-        // }
+            if(response.status === 200) {
+                setAuthenticated(true);
+                setUsername(username);
+                setToken(baToken);
+                return true;
+            } else {
+                logout()
+                return false;
+            }
+        } catch(error) {
+            logout()
+            return false;
+        }
     }
 
     function logout() {
         setAuthenticated(false);
+        setUsername(null);
+        setToken(null);
     }
 
     return (
-        <AuthContext.Provider value={ { isAuthenticated, login, logout, username} }>
+        <AuthContext.Provider value={ { isAuthenticated, login, logout, username, token} }>
             {children}
         </AuthContext.Provider>
     );
